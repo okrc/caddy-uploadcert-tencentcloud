@@ -3,7 +3,7 @@ module github.com/okrc/caddy-uploadcert-tencentcloud
 go 1.25
 
 require (
-	github.com/caddyserver/caddy/v2 v2.10.1
+	github.com/caddyserver/caddy/v2 v2.10.2
 	github.com/caddyserver/certmagic v0.24.0
 	github.com/pkg/errors v0.9.1
 	go.uber.org/zap v1.27.0
