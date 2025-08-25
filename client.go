@@ -64,7 +64,7 @@ func (h *TencentCloudCertHandler) UploadCertificate(ctx context.Context, publicK
 	return nil
 }
 
-func (h *TencentCloudCertHandler) UpdateCertificateInstance(ctx context.Context, publicKey, privateKey, id string) error {
+func (h *TencentCloudCertHandler) UpdateCertificateInstance(ctx context.Context, publicKey, privateKey, id string, DeployStatus *int64) error {
 	requestData := UpdateCertificateInstanceRequest{
 		OldCertificateId: id,
 		ResourceTypes: []string{
@@ -92,6 +92,7 @@ func (h *TencentCloudCertHandler) UpdateCertificateInstance(ctx context.Context,
 	if response.Response.Error != nil {
 		return fmt.Errorf("%s", response.Response.Error.Message)
 	}
+	*DeployStatus = response.Response.DeployStatus
 	return nil
 }
 
@@ -120,6 +121,28 @@ func (h *TencentCloudCertHandler) UpdateCertificateInstance(ctx context.Context,
 // 	}
 // 	return nil
 // }
+
+func (h *TencentCloudCertHandler) DeleteCertificate(ctx context.Context, id string) error {
+	requestData := DeleteCertificateRequest{
+		CertificateId: id,
+	}
+	payload, err := json.Marshal(requestData)
+	if err != nil {
+		return err
+	}
+	resp, err := h.doAPIRequest(ctx, "DeleteCertificate", string(payload))
+	if err != nil {
+		return err
+	}
+	var response DeleteCertificateResponse
+	if err = json.Unmarshal(resp, &response); err != nil {
+		return err
+	}
+	if response.Response.Error != nil {
+		return fmt.Errorf("%s", response.Response.Error.Message)
+	}
+	return nil
+}
 
 func (h *TencentCloudCertHandler) doAPIRequest(ctx context.Context, action, data string) ([]byte, error) {
 	endpointUrl := fmt.Sprintf("https://%s.tencentcloudapi.com", sslService)

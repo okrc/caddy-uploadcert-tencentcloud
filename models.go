@@ -75,6 +75,19 @@ type UploadCertificateResponse struct {
 // 	}
 // }
 
+type DeleteCertificateRequest struct {
+	CertificateId   string `json:"CertificateId,omitempty"`
+	IsCheckResource bool   `json:"IsCheckResource,omitempty"`
+}
+
+type DeleteCertificateResponse struct {
+	Response struct {
+		ResponseMeta
+		DeleteResult bool   `json:"DeleteResult,omitempty"`
+		TaskId       string `json:"TaskId,omitempty"`
+	}
+}
+
 type UpdateSyncProgress struct {
 	ResourceType              string                     `json:"ResourceType,omitempty"`
 	UpdateSyncProgressRegions []UpdateSyncProgressRegion `json:"UpdateSyncProgressRegions,omitempty"`

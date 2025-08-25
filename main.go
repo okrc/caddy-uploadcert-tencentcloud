@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"time"
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
@@ -17,10 +18,11 @@ func init() {
 }
 
 type TencentCloudCertHandler struct {
-	SecretId  string   `json:"secret_id"`
-	SecretKey string   `json:"secret_key"`
-	AllowList []string `json:"allow_list,omitempty"`
-	BlockList []string `json:"block_list,omitempty"`
+	SecretId         string   `json:"secret_id"`
+	SecretKey        string   `json:"secret_key"`
+	AllowList        []string `json:"allow_list,omitempty"`
+	BlockList        []string `json:"block_list,omitempty"`
+	TryDeleteOldCert bool     `json:"try_delete_old_cert,omitempty"`
 
 	storage certmagic.Storage
 	logger  *zap.Logger
@@ -85,8 +87,24 @@ func (h *TencentCloudCertHandler) Handle(ctx context.Context, e caddy.Event) err
 				h.logger.Error("failed to upload certificate", zap.Error(err))
 			}
 		} else {
-			if err := h.UpdateCertificateInstance(ctx, cert, key, certificateId); err != nil {
+			var DeployStatus int64 = 0
+			if err := h.UpdateCertificateInstance(ctx, cert, key, certificateId, &DeployStatus); err != nil {
 				h.logger.Error("failed to update certificate instance", zap.Error(err))
+			} else if h.TryDeleteOldCert {
+				for i := 0; i < 10 && DeployStatus != 1; i++ {
+					time.Sleep(30 * time.Second)
+					if err := h.UpdateCertificateInstance(ctx, cert, key, certificateId, &DeployStatus); err != nil {
+						h.logger.Error("failed to update certificate instance", zap.Error(err))
+						return
+					}
+				}
+				if DeployStatus == 1 {
+					if err := h.DeleteCertificate(ctx, certificateId); err != nil {
+						h.logger.Warn("failed to delete old certificate", zap.Error(err), zap.String("certificateId", certificateId))
+					} else {
+						h.logger.Info("successfully deleted old certificate", zap.String("certificateId", certificateId))
+					}
+				}
 			}
 		}
 	}()
@@ -119,6 +137,11 @@ func (h *TencentCloudCertHandler) UnmarshalCaddyfile(d *caddyfile.Dispenser) err
 				for d.NextArg() {
 					h.BlockList = append(h.BlockList, d.Val())
 				}
+			case "try_delete_old_cert":
+				if d.NextArg() {
+					return d.ArgErr()
+				}
+				h.TryDeleteOldCert = true
 			default:
 				return d.Errf("unrecognized subdirective '%s'", d.Val())
 			}
