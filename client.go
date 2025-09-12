@@ -64,7 +64,7 @@ func (h *TencentCloudCertHandler) UploadCertificate(ctx context.Context, publicK
 	return nil
 }
 
-func (h *TencentCloudCertHandler) UpdateCertificateInstance(ctx context.Context, publicKey, privateKey, id string, DeployStatus *int64) error {
+func (h *TencentCloudCertHandler) UpdateCertificateInstance(ctx context.Context, publicKey, privateKey, id string, DeployRecordId *uint64) error {
 	requestData := UpdateCertificateInstanceRequest{
 		OldCertificateId: id,
 		ResourceTypes: []string{
@@ -92,7 +92,7 @@ func (h *TencentCloudCertHandler) UpdateCertificateInstance(ctx context.Context,
 	if response.Response.Error != nil {
 		return fmt.Errorf("%s", response.Response.Error.Message)
 	}
-	*DeployStatus = response.Response.DeployStatus
+	*DeployRecordId = response.Response.DeployRecordId
 	return nil
 }
 
@@ -124,7 +124,8 @@ func (h *TencentCloudCertHandler) UpdateCertificateInstance(ctx context.Context,
 
 func (h *TencentCloudCertHandler) DeleteCertificate(ctx context.Context, id string) error {
 	requestData := DeleteCertificateRequest{
-		CertificateId: id,
+		CertificateId:   id,
+		IsCheckResource: true,
 	}
 	payload, err := json.Marshal(requestData)
 	if err != nil {
