@@ -87,18 +87,18 @@ func (h *TencentCloudCertHandler) Handle(ctx context.Context, e caddy.Event) err
 				h.logger.Error("failed to upload certificate", zap.Error(err))
 			}
 		} else {
-			var DeployStatus int64 = 0
-			if err := h.UpdateCertificateInstance(ctx, cert, key, certificateId, &DeployStatus); err != nil {
+			var DeployRecordId uint64 = 0
+			if err := h.UpdateCertificateInstance(ctx, cert, key, certificateId, &DeployRecordId); err != nil {
 				h.logger.Error("failed to update certificate instance", zap.Error(err))
 			} else if h.TryDeleteOldCert {
-				for i := 0; i < 10 && DeployStatus != 1; i++ {
+				for i := 0; i < 10 && DeployRecordId == 0; i++ {
 					time.Sleep(30 * time.Second)
-					if err := h.UpdateCertificateInstance(ctx, cert, key, certificateId, &DeployStatus); err != nil {
+					if err := h.UpdateCertificateInstance(ctx, cert, key, certificateId, &DeployRecordId); err != nil {
 						h.logger.Error("failed to update certificate instance", zap.Error(err))
 						return
 					}
 				}
-				if DeployStatus == 1 {
+				if DeployRecordId > 0 {
 					if err := h.DeleteCertificate(ctx, certificateId); err != nil {
 						h.logger.Warn("failed to delete old certificate", zap.Error(err), zap.String("certificateId", certificateId))
 					} else {
