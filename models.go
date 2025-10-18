@@ -29,9 +29,9 @@ type UpdateCertificateInstanceRequest struct {
 	ResourceTypes              []string `json:"ResourceTypes,omitempty"`
 	CertificatePublicKey       string   `json:"CertificatePublicKey,omitempty"`
 	CertificatePrivateKey      string   `json:"CertificatePrivateKey,omitempty"`
-	ExpiringNotificationSwitch uint64   `json:"ExpiringNotificationSwitch"`
-	Repeatable                 bool     `json:"Repeatable,omitempty"`
-	AllowDownload              bool     `json:"AllowDownload,omitempty"`
+	ExpiringNotificationSwitch uint64   `json:"ExpiringNotificationSwitch,omitempty"`
+	Repeatable                 *bool    `json:"Repeatable,omitempty"`
+	AllowDownload              *bool    `json:"AllowDownload,omitempty"`
 }
 
 type UpdateCertificateInstanceResponse struct {
@@ -47,7 +47,7 @@ type UploadCertificateRequest struct {
 	CertificatePublicKey  string `json:"CertificatePublicKey,omitempty"`
 	CertificatePrivateKey string `json:"CertificatePrivateKey,omitempty"`
 	CertificateType       string `json:"CertificateType,omitempty"`
-	Repeatable            bool   `json:"Repeatable,omitempty"`
+	Repeatable            *bool  `json:"Repeatable,omitempty"`
 }
 
 type UploadCertificateResponse struct {

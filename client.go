@@ -10,6 +10,12 @@ import (
 	"strings"
 )
 
+var (
+	repeatable                        = false
+	allowDownload                     = false
+	expiringNotificationSwitch uint64 = 1
+)
+
 func (h *TencentCloudCertHandler) DescribeCertificates(ctx context.Context, domain string) (string, error) {
 	requestData := DescribeCertificatesRequest{
 		SearchKey:       domain,
@@ -44,7 +50,7 @@ func (h *TencentCloudCertHandler) UploadCertificate(ctx context.Context, publicK
 		CertificatePublicKey:  publicKey,
 		CertificatePrivateKey: privateKey,
 		CertificateType:       "SVR",
-		Repeatable:            false,
+		Repeatable:            &repeatable,
 	}
 	payload, err := json.Marshal(requestData)
 	if err != nil {
@@ -73,9 +79,9 @@ func (h *TencentCloudCertHandler) UpdateCertificateInstance(ctx context.Context,
 		},
 		CertificatePublicKey:       publicKey,
 		CertificatePrivateKey:      privateKey,
-		ExpiringNotificationSwitch: 1,
-		Repeatable:                 false,
-		AllowDownload:              false,
+		ExpiringNotificationSwitch: expiringNotificationSwitch,
+		Repeatable:                 &repeatable,
+		AllowDownload:              &allowDownload,
 	}
 	payload, err := json.Marshal(requestData)
 	if err != nil {
