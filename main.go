@@ -9,7 +9,6 @@ import (
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
 	"github.com/caddyserver/certmagic"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -48,25 +47,25 @@ func (h *TencentCloudCertHandler) Handle(ctx context.Context, e caddy.Event) err
 	}
 	certID, ok := e.Data["identifier"].(string)
 	if !ok {
-		return errors.New("missing certificate identifier")
+		return fmt.Errorf("missing certificate identifier")
 	}
 	if slices.Contains(h.BlockList, certID) || len(h.AllowList) > 0 && !slices.Contains(h.AllowList, certID) {
-		h.logger.Warn(fmt.Sprintf("upload_cert_tencentcloud ignored certificate %s not matching the current rule", certID), zap.String("event", e.Name()))
+		h.logger.Info(fmt.Sprintf("upload_cert_tencentcloud ignored certificate %s not matching the current rule", certID), zap.String("event", e.Name()))
 		return nil
 	}
 	certificatePath, ok := e.Data["certificate_path"].(string)
 	if !ok {
-		return errors.New("missing certificate path")
+		return fmt.Errorf("missing certificate path")
 	}
 	privateKeyPath, ok := e.Data["private_key_path"].(string)
 	if !ok {
-		return errors.New("missing private key path")
+		return fmt.Errorf("missing private key path")
 	}
 
 	loadCert := func(path string) (string, error) {
 		bytes, err := h.storage.Load(ctx, path)
 		if err != nil {
-			return "", errors.Wrapf(err, "failed to load file: %s", path)
+			return "", fmt.Errorf("failed to load file: %s", path)
 		}
 		return string(bytes), nil
 	}
@@ -84,31 +83,38 @@ func (h *TencentCloudCertHandler) Handle(ctx context.Context, e caddy.Event) err
 		certificateId, _ := h.DescribeCertificates(ctx, certID)
 		if certificateId == "" {
 			if err := h.UploadCertificate(ctx, cert, key); err != nil {
-				h.logger.Error("failed to upload certificate", zap.Error(err))
+				h.logger.Error("upload certificate failed", zap.String("certificate", certID), zap.Error(err))
+				return
 			}
 		} else {
-			var DeployRecordId uint64 = 0
-			if err := h.UpdateCertificateInstance(ctx, cert, key, certificateId, &DeployRecordId); err != nil {
-				h.logger.Error("failed to update certificate instance", zap.Error(err))
-			} else if h.TryDeleteOldCert {
-				for i := 0; i < 10 && DeployRecordId == 0; i++ {
-					time.Sleep(30 * time.Second)
-					if err := h.UpdateCertificateInstance(ctx, cert, key, certificateId, &DeployRecordId); err != nil {
-						h.logger.Error("failed to update certificate instance", zap.Error(err))
+			var deployRecordId uint64
+			for i := 0; i < 60 && deployRecordId == 0; i++ {
+				if err := h.UpdateCertificateInstance(ctx, cert, key, certificateId, &deployRecordId); err != nil {
+					if err := h.UploadCertificate(ctx, cert, key); err != nil {
+						h.logger.Error("upload certificate after update failure failed", zap.String("certificate", certID), zap.Error(err))
 						return
 					}
+					deployRecordId = 1
 				}
-				if DeployRecordId > 0 {
-					if err := h.DeleteCertificate(ctx, certificateId); err != nil {
-						h.logger.Warn("failed to delete old certificate", zap.Error(err), zap.String("certificateId", certificateId))
-					} else {
-						h.logger.Info("successfully deleted old certificate", zap.String("certificateId", certificateId))
-					}
+				time.Sleep(5 * time.Second)
+			}
+			if deployRecordId == 0 {
+				h.logger.Error("failed to update certificate instance", zap.Error(err))
+				return
+			}
+			if h.TryDeleteOldCert {
+				if err := h.DeleteCertificate(ctx, certificateId); err != nil {
+					h.logger.Warn("failed to delete old certificate", zap.String("certificateId", certificateId), zap.Error(err))
+				} else {
+					h.logger.Info("successfully deleted old certificate", zap.String("certificateId", certificateId))
 				}
 			}
 		}
+		h.logger.Info("successfully uploaded certificate to Tencent Cloud",
+			zap.String("certificate", certID),
+			zap.String("event", e.Name()),
+		)
 	}()
-	h.logger.Info(fmt.Sprintf("upload_cert_tencentcloud successfully uploaded domain %s to Tencent Cloud", certID), zap.String("event", e.Name()))
 	return nil
 }
 
