@@ -17,12 +17,16 @@
 ### Caddyfile Configuration Example
 
 ```caddyfile
-upload_cert_tencentcloud {
-    secret_id  <Tencent Cloud API Secret ID>
-    secret_key <Tencent Cloud API Secret Key>
-    allow_list example.com www.example.com
-    block_list test.example.com
-    try_delete_old_cert
+{
+	events {
+		on cert_obtained upload_cert_tencentcloud {
+			secret_id {$TENCENTCLOUD_SECRET_ID}
+			secret_key {$TENCENTCLOUD_SECRET_KEY}
+            allow_list example.com www.example.com
+            block_list test.example.com
+			try_delete_old_cert
+		}
+	}
 }
 ```
 
