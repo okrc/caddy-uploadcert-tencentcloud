@@ -12,16 +12,23 @@ import (
 	"go.uber.org/zap"
 )
 
+// init registers the Tencent Cloud certificate upload handler module with Caddy
 func init() {
 	caddy.RegisterModule(TencentCloudCertHandler{})
 }
 
+// TencentCloudCertHandler handles automatic certificate upload to Tencent Cloud
 type TencentCloudCertHandler struct {
-	SecretId         string   `json:"secret_id"`
-	SecretKey        string   `json:"secret_key"`
-	AllowList        []string `json:"allow_list,omitempty"`
-	BlockList        []string `json:"block_list,omitempty"`
-	TryDeleteOldCert bool     `json:"try_delete_old_cert,omitempty"`
+	// SecretId is the Tencent Cloud API access key ID for authentication
+	SecretId string `json:"secret_id"`
+	// SecretKey is the Tencent Cloud API access key for signature verification
+	SecretKey string `json:"secret_key"`
+	// AllowList specifies which domains are allowed to upload certificates
+	AllowList []string `json:"allow_list,omitempty"`
+	// BlockList specifies which domains are blocked from uploading certificates
+	BlockList []string `json:"block_list,omitempty"`
+	// TryDeleteOldCert determines whether to delete old certificates when updating
+	TryDeleteOldCert bool `json:"try_delete_old_cert,omitempty"`
 
 	storage certmagic.Storage
 	logger  *zap.Logger

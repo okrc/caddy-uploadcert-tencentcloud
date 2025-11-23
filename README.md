@@ -22,12 +22,14 @@ upload_cert_tencentcloud {
     secret_key <Tencent Cloud API Secret Key>
     allow_list example.com www.example.com
     block_list test.example.com
+    try_delete_old_cert
 }
 ```
 
 - `secret_id` and `secret_key`: Tencent Cloud API credentials.
 - `allow_list`：Only upload certificates for the domains in this list (optional).
 - `block_list`：Do not upload certificates for the domains in this list (optional).
+- `try_delete_old_cert`：Try to delete the old certificate when the certificate is updated (optional).
 
 ## Development & Contribution
 
