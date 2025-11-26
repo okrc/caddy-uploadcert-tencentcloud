@@ -18,15 +18,15 @@
 
 ```caddyfile
 {
-	events {
-		on cert_obtained upload_cert_tencentcloud {
-			secret_id {$TENCENTCLOUD_SECRET_ID}
-			secret_key {$TENCENTCLOUD_SECRET_KEY}
+    events {
+        on cert_obtained upload_cert_tencentcloud {
+            secret_id {$TENCENTCLOUD_SECRET_ID}
+            secret_key {$TENCENTCLOUD_SECRET_KEY}
             allow_list example.com www.example.com
             block_list test.example.com
-			try_delete_old_cert
-		}
-	}
+            try_delete_old_cert
+        }
+    }
 }
 ```
 
