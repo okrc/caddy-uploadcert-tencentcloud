@@ -143,13 +143,9 @@ func (h *TencentCloudCertHandler) UnmarshalCaddyfile(d *caddyfile.Dispenser) err
 				}
 				h.SecretKey = d.Val()
 			case "allow_list":
-				for d.NextArg() {
-					h.AllowList = append(h.AllowList, d.Val())
-				}
+				h.AllowList = append(h.AllowList, d.RemainingArgs()...)
 			case "block_list":
-				for d.NextArg() {
-					h.BlockList = append(h.BlockList, d.Val())
-				}
+				h.BlockList = append(h.BlockList, d.RemainingArgs()...)
 			case "try_delete_old_cert":
 				if d.NextArg() {
 					return d.ArgErr()
