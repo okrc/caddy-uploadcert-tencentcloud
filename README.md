@@ -1,5 +1,10 @@
 # uploadcert_tencentcloud
 
+> [!IMPORTANT]
+> **Project Status: Archived**
+> This project has been merged into [caddy-upload-cert](https://github.com/okrc/caddy-upload-cert) as part of a unified multi-cloud certificate upload solution.
+> Please head over to the new repository for the latest updates, features, and bug fixes.
+
 ## Overview
 
 `uploadcert_tencentcloud` is an event handler module for Caddy that automatically uploads newly obtained certificates to Tencent Cloud SSL service and supports automatic certificate updates. The module supports whitelist and blacklist rules for certificates, allowing flexible control over which certificates should be uploaded.
